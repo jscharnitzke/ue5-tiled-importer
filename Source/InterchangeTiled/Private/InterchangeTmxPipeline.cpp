@@ -42,8 +42,26 @@ void UInterchangeTmxPipeline::ExecutePipeline(
 		const UInterchangeBaseNode* Node = BaseNodeContainer->GetNode(TileMapNodeUid);
 		const UInterchangeTileMapNode* TileMapNode = Cast<UInterchangeTileMapNode>(Node);
 
-		FString TileSetFilename;
-		TileMapNode->GetAttribute("TileSetFilename", TileSetFilename);
+		TArray<FString> TileSetFilenames;
+		TArray<int32> TileSetFirstGids;
+		FString CountStr;
+		if (TileMapNode->GetAttribute("TileSetCount", CountStr))
+		{
+			int32 TilesetCount = FCString::Atoi(*CountStr);
+			for (int32 i = 0; i < TilesetCount; ++i)
+			{
+				FString Filename;
+				if (TileMapNode->GetAttribute<FString>(FString::Printf(TEXT("TileSetFilename[%d]"), i), Filename))
+				{
+					TileSetFilenames.Add(Filename);
+				}
+				FString FirstGidStr;
+				if (TileMapNode->GetAttribute<FString>(FString::Printf(TEXT("TileSetFirstGid[%d]"), i), FirstGidStr))
+				{
+					TileSetFirstGids.Add(FCString::Atoi(*FirstGidStr));
+				}
+			}
+		}
 
 		UInterchangeTileMapFactoryNode* TileMapFactoryNode = NewObject<UInterchangeTileMapFactoryNode>(
 			BaseNodeContainer,
@@ -54,22 +72,30 @@ void UInterchangeTmxPipeline::ExecutePipeline(
 			TileMapNode->GetDisplayLabel() + "_tile_map",
 			EInterchangeNodeContainerType::FactoryData
 		);
-		TileMapFactoryNode->SetAttribute("TileSetFilename", TileSetFilename);
 
-		UInterchangeSourceData* SourceData = InterchangeManager.CreateSourceData(TileSetFilename);
+		TileMapFactoryNode->SetAttribute<FString>("TileSetCount", CountStr);
+		for (int32 i = 0; i < TileSetFilenames.Num(); ++i)
+		{
+			TileMapFactoryNode->SetAttribute<FString>(FString::Printf(TEXT("TileSetFilename[%d]"), i), TileSetFilenames[i]);
+			TileMapFactoryNode->SetAttribute<FString>(FString::Printf(TEXT("TileSetFirstGid[%d]"), i), FString::FromInt(TileSetFirstGids[i]));
+		}
 
-		// need to init the hash since it's not done automatically
-		SourceData->GetFileContentHash();
+		for (int32 i = 0; i < TileSetFilenames.Num(); ++i)
+		{
+			UInterchangeSourceData* SourceData = InterchangeManager.CreateSourceData(TileSetFilenames[i]);
 
-		FImportAssetParameters ImportAssetParameters;
-		ImportAssetParameters.bReplaceExisting = false;
-		ImportAssetParameters.bIsAutomated = true;
+			SourceData->GetFileContentHash();
 
-		InterchangeManager.ImportAsset(
-			ContentImportPath,
-			SourceData,
-			ImportAssetParameters
-		);
+			FImportAssetParameters ImportAssetParameters;
+			ImportAssetParameters.bReplaceExisting = false;
+			ImportAssetParameters.bIsAutomated = true;
+
+			InterchangeManager.ImportAsset(
+				ContentImportPath,
+				SourceData,
+				ImportAssetParameters
+			);
+		}
 
 		BaseNodeContainer->AddNode(TileMapFactoryNode);
 	}
