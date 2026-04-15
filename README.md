@@ -5,19 +5,22 @@ Import `.tsx` Tile Set and `.tmx` Tile Map files from Tiled Map Editor into Unre
 ## Installation
 
 1. Clone this project or download it and extract the code directly into `<your-project>/Plugins`.
-2. Refresh your Visual Studio project.
-3. Create a Pipeline asset somewhere in your project for each file type that you need to import:
+2. If your project is already open in Unreal, refresh your Visual Studio project.
+3. Navigate to `Edit` > `Plugins`, find the `TiledImporter` plugin, and enable it.
+4. Restart Unreal Engine.
+5. If you see a message asking you to rebuild the `TiledInterchange` module, click `Yes`.
+6. Create an Interchange Pipeline asset somewhere in your project for each file type that you need to import:
    - `InterchangeTsxPipeline` for Tile Sets
    - `InterchangeTmxPipeline` for Tile Maps
   
 ![image](https://github.com/user-attachments/assets/661e666a-821f-49e2-8b0f-7b6ecccd0c96)
 
-3. In your Project Settings, navigate to `Engine` > `Interchange`.
-4. In `Content Import Settings` > `Pipeline Stacks` > `Assets` > `Per Translator Pipelines` click `Add Element` for each type of file you need to import.
+7. In your Project Settings, navigate to `Engine` > `Interchange`.
+8. In `Content Import Settings` > `Pipeline Stacks` > `Assets` > `Per Translator Pipelines` click `Add Element` for each type of file you need to import.
 
 ![image](https://github.com/user-attachments/assets/7c227f3b-944b-4449-9333-e1bece64f6d1)
 
-5. For each Per Translator Pipeline you added:
+9. For each Per Translator Pipeline you added:
     - Choose a `Translator`:
       - `InterchangeTsxTranslator` for Tile Sets
       - `InterchangeTmxTranslator` for Tile Maps
@@ -29,21 +32,25 @@ That's it! You can now import Tile Map and Tile Set files from Tiled Map Editor 
 
 ## Limitations
 
-Support is currently limited to specific Tile Map types and settings and Tile Set collision objects.
+Support is currently limited to specific Tile Map settings and Tile Set collision objects.
 
 **Tile Map Types**
+
+- Hexagonal
+- Isometric
 - Orthogonal
 
 **Tile Map settings**
+
 - `Right Down` render order
 
 **Tile Set collision objects**
+
 - Rectangle
 
 ## Future Development
 
 Future releases will add support for:
-- Isometric Tile Maps
-- Isometric (Staggered) Tile Maps
+
 - Other render orders
 - Polygon and circle collision objects
