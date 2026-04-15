@@ -25,12 +25,13 @@ public:
 	
 private:
 
-	bool TranslateTileMap(
-		FString Filename,
-		UInterchangeBaseNodeContainer& BaseNodeContainer
-	) const;
+	bool TranslateTileMap(FString Filename, UInterchangeBaseNodeContainer& BaseNodeContainer) const;
 
+	struct FTilesetReference
+	{
+		FString Filename;
+		int32 FirstGid;
+	};
 
-	// Get the filename of the TSX tile set file referenced in the source TMX file.
-	static FString GetTileSetFilenameFromSourceFilename(FString Filename);
+	static TArray<FTilesetReference> GetTilesetReferencesFromSourceFilename(FString Filename);
 };

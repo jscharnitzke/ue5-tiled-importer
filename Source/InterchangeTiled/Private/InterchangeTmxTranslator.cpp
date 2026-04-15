@@ -82,20 +82,43 @@ bool UInterchangeTmxTranslator::TranslateTileMap(FString Filename, UInterchangeB
 		DisplayLabel,
 		EInterchangeNodeContainerType::TranslatedAsset
 	);
-	TileMapNode->SetAttribute("TileSetFilename", GetTileSetFilenameFromSourceFilename(Filename));
+
+	TArray<FTilesetReference> TileSetReferences = GetTilesetReferencesFromSourceFilename(Filename);
+	TileMapNode->SetAttribute<FString>("TileSetCount", FString::FromInt(TileSetReferences.Num()));
+	for (int32 i = 0; i < TileSetReferences.Num(); ++i)
+	{
+		TileMapNode->SetAttribute<FString>(FString::Printf(TEXT("TileSetFilename[%d]"), i), TileSetReferences[i].Filename);
+		TileMapNode->SetAttribute<FString>(FString::Printf(TEXT("TileSetFirstGid[%d]"), i), FString::FromInt(TileSetReferences[i].FirstGid));
+	}
 
 	BaseNodeContainer.AddNode(TileMapNode);
 
 	return true;
 }
 
-FString UInterchangeTmxTranslator::GetTileSetFilenameFromSourceFilename(FString Filename)
+TArray<UInterchangeTmxTranslator::FTilesetReference> UInterchangeTmxTranslator::GetTilesetReferencesFromSourceFilename(FString Filename)
 {
+	TArray<FTilesetReference> TileSetReferences;
+
 	FXmlFile TileMapFile(Filename);
 	FXmlNode* RootNode = TileMapFile.GetRootNode();
-	const FXmlNode* TileSetNode = RootNode->FindChildNode("tileset");
-	FString ImageSource = TileSetNode->GetAttribute("source");
+	TArray<FXmlNode*> ChildrenNodes = RootNode->GetChildrenNodes();
 
-	return InterchangeTiled::GetAbsolutePath(ImageSource, Filename);
+	for (const FXmlNode* ChildNode : ChildrenNodes)
+	{
+		if (ChildNode->GetTag() == "tileset")
+		{
+			FString Source = ChildNode->GetAttribute("source");
+			FString FirstGidStr = ChildNode->GetAttribute("firstgid");
+			int32 FirstGid = FCString::Atoi(*FirstGidStr);
+
+			FTilesetReference Ref;
+			Ref.Filename = InterchangeTiled::GetAbsolutePath(Source, Filename);
+			Ref.FirstGid = FirstGid;
+			TileSetReferences.Add(Ref);
+		}
+	}
+
+	return TileSetReferences;
 }
 
