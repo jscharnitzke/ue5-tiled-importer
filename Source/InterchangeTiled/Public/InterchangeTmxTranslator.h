@@ -17,6 +17,7 @@ class INTERCHANGETILED_API UInterchangeTmxTranslator : public UInterchangeTransl
 public:
 
 	// inherited methods
+	virtual bool CanImportSourceData(const UInterchangeSourceData* InSourceData) const;
 	virtual bool IsThreadSafe() const { return false; }
 	virtual EInterchangeTranslatorAssetType GetSupportedAssetTypes() const override;
 	virtual TArray<FString> GetSupportedFormats() const override;

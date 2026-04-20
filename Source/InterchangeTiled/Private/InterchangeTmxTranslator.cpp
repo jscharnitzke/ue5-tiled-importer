@@ -17,6 +17,14 @@ static FAutoConsoleVariableRef CCvarInterchangeEnableTmxImport(
 	ECVF_Default
 );
 
+bool UInterchangeTmxTranslator::CanImportSourceData(const UInterchangeSourceData* InSourceData) const
+{
+	if (!InSourceData) return false;
+
+	FString Extension = FPaths::GetExtension(InSourceData->GetFilename()).ToLower();
+	return Extension == TEXT("tmx");
+}
+
 EInterchangeTranslatorAssetType UInterchangeTmxTranslator::GetSupportedAssetTypes() const
 {
 	return EInterchangeTranslatorAssetType::None;
@@ -84,6 +92,10 @@ bool UInterchangeTmxTranslator::TranslateTileMap(FString Filename, UInterchangeB
 	);
 
 	TArray<FTilesetReference> TileSetReferences = GetTilesetReferencesFromSourceFilename(Filename);
+
+	// If it's not a real TMX, stop immediately. Assumes all maps have at least 1 tileset. 	
+	if (TileSetReferences.Num() == 0) return false;
+
 	TileMapNode->SetAttribute<FString>("TileSetCount", FString::FromInt(TileSetReferences.Num()));
 	for (int32 i = 0; i < TileSetReferences.Num(); ++i)
 	{
@@ -102,6 +114,14 @@ TArray<UInterchangeTmxTranslator::FTilesetReference> UInterchangeTmxTranslator::
 
 	FXmlFile TileMapFile(Filename);
 	FXmlNode* RootNode = TileMapFile.GetRootNode();
+
+	// If invalid file, RootNode is null.
+	if (!RootNode)
+	{
+		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("TMX Translator: Failed to parse %s as XML."), *Filename);
+		return TileSetReferences; // Return empty array
+	}
+
 	TArray<FXmlNode*> ChildrenNodes = RootNode->GetChildrenNodes();
 
 	for (const FXmlNode* ChildNode : ChildrenNodes)
@@ -121,4 +141,3 @@ TArray<UInterchangeTmxTranslator::FTilesetReference> UInterchangeTmxTranslator::
 
 	return TileSetReferences;
 }
-

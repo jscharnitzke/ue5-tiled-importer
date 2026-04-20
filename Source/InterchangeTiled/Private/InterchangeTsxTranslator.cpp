@@ -24,7 +24,16 @@ static FAutoConsoleVariableRef CCvarInterchangeEnableTsxImport(
 
 bool UInterchangeTsxTranslator::CanImportSourceData(const UInterchangeSourceData* InSourceData) const
 {
-	return true;
+	if (!InSourceData)
+	{
+		return false;
+	}
+
+	FString Filename = InSourceData->GetFilename();
+	FString Extension = FPaths::GetExtension(Filename).ToLower();
+
+	// Only return true if the file is actually a Tiled Tileset (.tsx)
+	return Extension == TEXT("tsx");
 }
 
 EInterchangeTranslatorAssetType UInterchangeTsxTranslator::GetSupportedAssetTypes() const
@@ -62,18 +71,24 @@ bool UInterchangeTsxTranslator::Translate(UInterchangeBaseNodeContainer& BaseNod
 	return TranslateTileSet(Filename, BaseNodeContainer);
 }
 
-bool UInterchangeTsxTranslator::TranslateTileSet(
-	FString Filename,
-	UInterchangeBaseNodeContainer& BaseNodeContainer
-) const
+bool UInterchangeTsxTranslator::TranslateTileSet(FString Filename, UInterchangeBaseNodeContainer& BaseNodeContainer) const
 {
+	// Get the texture path first. 
+	FString TexturePath = GetTexturePathFromSourceFilename(Filename);
+
+	if (TexturePath.IsEmpty())
+	{
+		// This file isn't a valid Tiled TSX. 
+		// Returning false tells the Interchange system "I can't handle this file."
+		return false;
+	}
+
 	UClass* TileSetClass = UInterchangeTileSetNode::StaticClass();
 
 	if (!ensure(TileSetClass))
 	{
 		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TSX tile set: UInterchangeTileSetNode is unsupported."))
-
-		return false;
+			return false;
 	}
 
 	FString DisplayLabel = FPaths::GetBaseFilename(Filename);
@@ -84,16 +99,17 @@ bool UInterchangeTsxTranslator::TranslateTileSet(
 	if (!ensure(TileSetNode))
 	{
 		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TSX tile set: Failed to create UInterchangeTileSetNode."));
-
 		return false;
 	}
 
 	TileSetNode->InitializeNode(
-		NodeUid, 
-		DisplayLabel, 
+		NodeUid,
+		DisplayLabel,
 		EInterchangeNodeContainerType::TranslatedAsset
 	);
-	TileSetNode->SetAttribute("TextureFilename", GetTexturePathFromSourceFilename(Filename));
+
+	// TexturePath is valid
+	TileSetNode->SetAttribute("TextureFilename", TexturePath);
 
 	BaseNodeContainer.AddNode(TileSetNode);
 
@@ -104,8 +120,22 @@ FString UInterchangeTsxTranslator::GetTexturePathFromSourceFilename(FString File
 {
 	FXmlFile TileSetFile(Filename);
 	FXmlNode* RootNode = TileSetFile.GetRootNode();
-	const FXmlNode* ImageNode = RootNode->FindChildNode("image");
-	FString ImageSource = ImageNode->GetAttribute("source");
+	// Ensure the file parsed as XML
+	if (!RootNode)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tiled Importer: Failed to parse %s as XML."), *Filename);
+		return FString();
+	}
 
+	const FXmlNode* ImageNode = RootNode->FindChildNode("image");
+
+	// : Ensure the <image> tag exists
+	if (!ImageNode)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Tiled Importer: No <image> node found in %s"), *Filename);
+		return FString();
+	}
+
+	FString ImageSource = ImageNode->GetAttribute("source");
 	return InterchangeTiled::GetAbsolutePath(ImageSource, Filename);
 }
