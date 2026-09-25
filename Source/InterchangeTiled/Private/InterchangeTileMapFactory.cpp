@@ -110,13 +110,10 @@ TArray<FTilesetImportInfo> UInterchangeTileMapFactory::LoadTileSets(const FSetup
 			FString TileSetAssetName = FPaths::GetBaseFilename(Filename) + "_tile_set";
 			FString ObjectPath = FPaths::Combine(TileMapPathName, TileSetAssetName);
 
-			TSet<FTopLevelAssetPath> ClassPaths{ UPaperTileSet::StaticClass()->GetClassPathName() };
-			TSet<FName> PackageNames{ FName(*ObjectPath) };
-
 			TArray<FAssetData> AssetData;
-			FARCompiledFilter Filter;
-			Filter.ClassPaths = ClassPaths;
-			Filter.PackageNames = PackageNames;
+			FARFilter Filter;
+			Filter.ClassPaths = { UPaperTileSet::StaticClass()->GetClassPathName() };
+			Filter.PackageNames = { FName(*ObjectPath) };
 			AssetRegistryModule.Get().GetAssets(Filter, AssetData);
 
 			if (AssetData.Num() > 0)

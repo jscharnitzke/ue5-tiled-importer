@@ -18,7 +18,8 @@ class INTERCHANGETILED_API UInterchangeTmxPipeline : public UInterchangePipeline
 public:
 	static FString GetPipelineCategory(UClass* AssetClass);
 
-	virtual void GetSupportAssetClasses(TArray<UClass*>& PipelineSupportAssetClasses) const override;
+	// The base class virtual was added in UE 5.5, so no override specifier.
+	virtual void GetSupportAssetClasses(TArray<UClass*>& PipelineSupportAssetClasses) const;
 
 protected:
 

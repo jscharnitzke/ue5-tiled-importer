@@ -29,7 +29,8 @@ public:
 		UInterchangeBaseNodeContainer* BaseNodeContainer
 	);
 
-	virtual void GetSupportAssetClasses(TArray<UClass*>& PipelineSupportAssetClasses) const override;
+	// The base class virtual was added in UE 5.5, so no override specifier.
+	virtual void GetSupportAssetClasses(TArray<UClass*>& PipelineSupportAssetClasses) const;
 
 protected:
 
