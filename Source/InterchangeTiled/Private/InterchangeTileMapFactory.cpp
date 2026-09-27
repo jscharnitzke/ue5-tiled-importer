@@ -123,6 +123,16 @@ TArray<FTilesetImportInfo> UInterchangeTileMapFactory::LoadTileSets(const FSetup
 			{
 				Info.TileSet = Cast<UPaperTileSet>(AssetData[0].GetAsset());
 			}
+			else
+			{
+				UE_LOG(
+					LogInterchangeTiledImport,
+					Warning,
+					TEXT("Tile set asset '%s' was not found at '%s'; tiles using it will be skipped."),
+					*TileSetAssetName,
+					*ObjectPath
+				);
+			}
 		}
 
 		FString FirstGidStr;
@@ -157,6 +167,28 @@ void UInterchangeTileMapFactory::SetupTileMapDimensions(UPaperTileMap* TileMap, 
 	else if (Orientation.Equals(TEXT("isometric"), ESearchCase::IgnoreCase))
 	{
 		TileMap->ProjectionMode = ETileMapProjectionMode::IsometricDiamond;
+	}
+	else
+	{
+		UE_LOG(
+			LogInterchangeTiledImport,
+			Warning,
+			TEXT("Tile map orientation '%s' is not supported and will be imported as orthogonal."),
+			*Orientation
+		);
+
+		TileMap->ProjectionMode = ETileMapProjectionMode::Orthogonal;
+	}
+
+	FString RenderOrder = RootNode->GetAttribute(TEXT("renderorder"));
+	if (!RenderOrder.IsEmpty() && !RenderOrder.Equals(TEXT("right-down"), ESearchCase::IgnoreCase))
+	{
+		UE_LOG(
+			LogInterchangeTiledImport,
+			Warning,
+			TEXT("Tile map render order '%s' is not supported; only 'right-down' is imported correctly."),
+			*RenderOrder
+		);
 	}
 }
 
