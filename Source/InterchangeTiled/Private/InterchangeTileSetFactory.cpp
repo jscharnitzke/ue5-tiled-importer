@@ -156,8 +156,14 @@ UTexture2D* UInterchangeTileSetFactory::LoadOrCreateTextureAsset(
 	ImportSettings->Filenames = Filenames;
 
 	TArray<UObject*> NewAssets = AssetToolsModule.Get().ImportAssetsAutomated(ImportSettings);
-	UObject* NewAsset = NewAssets[0];
-	Texture = Cast<UTexture2D>(NewAsset);
+
+	if (NewAssets.IsEmpty())
+	{
+		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Failed to import texture '%s'."), *TextureFilename);
+		return nullptr;
+	}
+
+	Texture = Cast<UTexture2D>(NewAssets[0]);
 
 	return Texture;
 }
