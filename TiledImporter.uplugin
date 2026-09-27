@@ -5,7 +5,7 @@
   "Modules": [
     {
         "Name": "InterchangeTiled",
-        "Type": "Runtime",
+        "Type": "Editor",
         "LoadingPhase": "PreDefault"
     }
   ],
