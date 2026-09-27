@@ -92,7 +92,7 @@ bool UInterchangeTsxTranslator::TranslateTileSet(FString Filename, UInterchangeB
 	}
 
 	FString DisplayLabel = FPaths::GetBaseFilename(Filename);
-	FString NodeUid("tsx:" + DisplayLabel);
+	FString NodeUid("tsx:" + Filename);
 
 	UInterchangeTileSetNode* TileSetNode = NewObject<UInterchangeTileSetNode>(&BaseNodeContainer, TileSetClass);
 

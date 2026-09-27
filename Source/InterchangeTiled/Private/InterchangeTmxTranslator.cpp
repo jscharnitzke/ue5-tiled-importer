@@ -64,23 +64,23 @@ bool UInterchangeTmxTranslator::Translate(UInterchangeBaseNodeContainer& BaseNod
 bool UInterchangeTmxTranslator::TranslateTileMap(FString Filename, UInterchangeBaseNodeContainer& BaseNodeContainer) const
 {
 
-	UClass* TileSetClass = UInterchangeTileMapNode::StaticClass();
+	UClass* TileMapClass = UInterchangeTileMapNode::StaticClass();
 
-	if (!ensure(TileSetClass))
+	if (!ensure(TileMapClass))
 	{
-		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TSX tile set: UInterchangeTileSetNode is unsupported."))
+		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TMX tile map: UInterchangeTileMapNode is unsupported."))
 
 			return false;
 	}
 
 	FString DisplayLabel = FPaths::GetBaseFilename(Filename);
-	FString NodeUid("tsx:" + DisplayLabel);
+	FString NodeUid("tmx:" + Filename);
 
-	UInterchangeTileMapNode* TileMapNode = NewObject<UInterchangeTileMapNode>(&BaseNodeContainer, TileSetClass);
+	UInterchangeTileMapNode* TileMapNode = NewObject<UInterchangeTileMapNode>(&BaseNodeContainer, TileMapClass);
 
 	if (!ensure(TileMapNode))
 	{
-		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TSX tile set: Failed to create UInterchangeTileMapNode."));
+		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Error importing TMX tile map: Failed to create UInterchangeTileMapNode."));
 
 		return false;
 	}
@@ -129,6 +129,18 @@ TArray<UInterchangeTmxTranslator::FTilesetReference> UInterchangeTmxTranslator::
 		if (ChildNode->GetTag() == "tileset")
 		{
 			FString Source = ChildNode->GetAttribute("source");
+
+			if (Source.IsEmpty())
+			{
+				UE_LOG(
+					LogInterchangeTiledImport,
+					Warning,
+					TEXT("Embedded tile sets are not supported; skipping a tile set in %s."),
+					*Filename
+				);
+				continue;
+			}
+
 			FString FirstGidStr = ChildNode->GetAttribute("firstgid");
 			int32 FirstGid = FCString::Atoi(*FirstGidStr);
 
