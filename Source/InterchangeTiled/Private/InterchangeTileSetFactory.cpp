@@ -100,6 +100,12 @@ void UInterchangeTileSetFactory::SetupObject_GameThread(const FSetupObjectParams
 		Arguments.FactoryNode,
 		FPaths::GetPath(Arguments.ImportedObject->GetPathName())
 	);
+	
+	if (!Texture)
+	{
+		UE_LOG(LogInterchangeTiledImport, Warning, TEXT("Unable to import Tile Set due to missing texture."));
+		return;
+	}
 
 	FXmlFile TileSetFile(Arguments.SourceData->GetFilename());
 	FXmlNode* RootNode = TileSetFile.GetRootNode();
