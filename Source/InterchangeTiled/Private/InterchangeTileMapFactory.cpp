@@ -156,9 +156,38 @@ void UInterchangeTileMapFactory::PopulateLayerTiles(
 	TArray<FString> TileUids;
 	LayerData.ParseIntoArray(TileUids, TEXT(","));
 
-	for (int TileIndex = 0; TileIndex < LayerWidth * LayerHeight; TileIndex++)
+	const int32 ExpectedTileCount = LayerWidth * LayerHeight;
+	if (TileUids.Num() < ExpectedTileCount)
 	{
-		int32 TileUid = FCString::Atoi(*TileUids[TileIndex]);
+		UE_LOG(
+			LogInterchangeTiledImport,
+			Warning,
+			TEXT("Tile layer data has %d entries, expected %d. Some tiles may be missing."),
+			TileUids.Num(),
+			ExpectedTileCount
+		);
+	}
+
+	const int32 TileCount = FMath::Min(TileUids.Num(), ExpectedTileCount);
+	bool bWarnedFlippedTile = false;
+
+	for (int TileIndex = 0; TileIndex < TileCount; TileIndex++)
+	{
+		const uint32 GlobalId = static_cast<uint32>(FCString::Atoi64(*TileUids[TileIndex]));
+
+		// The three highest bits of a global tile id encode flipping.
+		const int32 TileUid = GlobalId & 0x1FFFFFFF;
+		const bool bFlipped = (GlobalId & ~0x1FFFFFFFu) != 0;
+
+		if (bFlipped && !bWarnedFlippedTile)
+		{
+			UE_LOG(
+				LogInterchangeTiledImport,
+				Warning,
+				TEXT("Flipped or rotated tiles are not supported and will be imported unflipped.")
+			);
+			bWarnedFlippedTile = true;
+		}
 
 		if (TileUid == 0)
 		{
@@ -210,7 +239,29 @@ void UInterchangeTileMapFactory::ImportTileLayer(UPaperTileMap* TileMap, FXmlNod
 	Layer->DestructiveAllocateMap(LayerWidth, LayerHeight);
 	Layer->LayerName = FText::FromString(LayerName);
 
-	const FXmlNode* LayerDataNode = LayerNode->GetFirstChildNode();
+	const FXmlNode* LayerDataNode = LayerNode->FindChildNode("data");
+	if (!LayerDataNode)
+	{
+		UE_LOG(
+			LogInterchangeTiledImport,
+			Warning,
+			TEXT("Tile layer '%s' contains no data."), *LayerName
+		);
+		return;
+	}
+
+	const FString Encoding = LayerDataNode->GetAttribute("encoding");
+	if (!Encoding.IsEmpty() && !Encoding.Equals(TEXT("csv"), ESearchCase::IgnoreCase))
+	{
+		UE_LOG(
+			LogInterchangeTiledImport,
+			Warning,
+			TEXT("Tile layer '%s' uses encoding '%s', which is not supported. Only CSV layer data is imported."),
+			*LayerName, *Encoding
+		);
+		return;
+	}
+
 	FString LayerData = LayerDataNode->GetContent();
 
 	PopulateLayerTiles(Layer, LayerData, LayerWidth, LayerHeight, TileSets);
