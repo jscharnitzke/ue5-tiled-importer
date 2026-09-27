@@ -56,7 +56,22 @@ UInterchangeFactoryBase::FImportAssetResult UInterchangeTileSetFactory::BeginImp
 		}
 	}
 
-	if (!ExistingAsset)
+	if (ExistingAsset)
+	{
+		TileSet = Cast<UPaperTileSet>(ExistingAsset);
+
+		if (!TileSet)
+		{
+			LogAssetCreationError(
+				Arguments,
+				LOCTEXT("TileSetFactory_ExistingAssetWrongClass", "The existing asset is not a Paper Tile Set."),
+				ImportAssetResult
+			);
+
+			return ImportAssetResult;
+		}
+	}
+	else
 	{
 		TileSet = NewObject<UPaperTileSet>(
 			Arguments.Parent,

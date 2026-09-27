@@ -49,7 +49,22 @@ UInterchangeFactoryBase::FImportAssetResult UInterchangeTileMapFactory::BeginImp
 		}
 	}
 
-	if (!ExistingAsset)
+	if (ExistingAsset)
+	{
+		TileMap = Cast<UPaperTileMap>(ExistingAsset);
+
+		if (!TileMap)
+		{
+			LogAssetCreationError(
+				Arguments,
+				LOCTEXT("TileMapFactory_ExistingAssetWrongClass", "The existing asset is not a Paper Tile Map."),
+				ImportAssetResult
+			);
+
+			return ImportAssetResult;
+		}
+	}
+	else
 	{
 		TileMap = NewObject<UPaperTileMap>(
 			Arguments.Parent,
@@ -283,6 +298,9 @@ void UInterchangeTileMapFactory::SetupObject_GameThread(const FSetupObjectParams
 	}
 
 	SetupTileMapDimensions(TileMap, RootNode);
+
+	// Remove any layers left over from a previous import before rebuilding.
+	TileMap->TileLayers.Empty();
 
 	TArray<FXmlNode*> ChildrenNodes = RootNode->GetChildrenNodes();
 	for (FXmlNode* ChildNode : ChildrenNodes)
