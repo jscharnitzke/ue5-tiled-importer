@@ -26,6 +26,6 @@ public:
 
 protected:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Tiled")
 	FString AssetName;
 };
