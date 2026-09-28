@@ -1,9 +1,10 @@
 #include "InterchangeTmxPipeline.h"
 
-#include "InterchangeManager.h"
 #include "InterchangeTileMapFactoryNode.h"
 #include "InterchangeTileMapNode.h"
-#include "Misc/SecureHash.h"
+#include "InterchangeTileSetFactoryNode.h"
+#include "InterchangeTileSetNode.h"
+#include "InterchangeTsxPipeline.h"
 #include "PaperTileMap.h"
 
 FString UInterchangeTmxPipeline::GetPipelineCategory(UClass* AssetClass)
@@ -35,7 +36,8 @@ void UInterchangeTmxPipeline::ExecutePipeline(
 		UInterchangeTileMapNode::StaticClass(), TileMapNodeUids
 	);
 
-	UInterchangeManager& InterchangeManager = UInterchangeManager::GetInterchangeManager();
+	TArray<FString> TileSetNodeUids;
+	BaseNodeContainer->GetNodes(UInterchangeTileSetNode::StaticClass(), TileSetNodeUids);
 
 	for (FString TileMapNodeUid : TileMapNodeUids)
 	{
@@ -85,21 +87,18 @@ void UInterchangeTmxPipeline::ExecutePipeline(
 			TileMapFactoryNode->SetAttribute<FString>(FString::Printf(TEXT("TileSetFirstGid[%d]"), i), FString::FromInt(TileSetFirstGids[i]));
 		}
 
-		for (int32 i = 0; i < TileSetFilenames.Num(); ++i)
+		// Create a factory node for each tile set the map references so
+		// they are imported in the same operation, and mark them as
+		// dependencies so they are created before the tile map.
+		for (const FString& TileSetNodeUid : TileSetNodeUids)
 		{
-			UInterchangeSourceData* SourceData = InterchangeManager.CreateSourceData(TileSetFilenames[i]);
-
-			SourceData->GetFileContentHash();
-
-			FImportAssetParameters ImportAssetParameters;
-			ImportAssetParameters.bReplaceExisting = false;
-			ImportAssetParameters.bIsAutomated = true;
-
-			InterchangeManager.ImportAsset(
-				ContentImportPath,
-				SourceData,
-				ImportAssetParameters
-			);
+			const UInterchangeTileSetNode* TileSetNode =
+				Cast<UInterchangeTileSetNode>(BaseNodeContainer->GetNode(TileSetNodeUid));
+			if (UInterchangeTileSetFactoryNode* TileSetFactoryNode =
+					UInterchangeTsxPipeline::CreateTileSetFactoryNode(TileSetNode, BaseNodeContainer))
+			{
+				TileMapFactoryNode->AddFactoryDependencyUid(TileSetFactoryNode->GetUniqueID());
+			}
 		}
 
 		BaseNodeContainer->AddNode(TileMapFactoryNode);

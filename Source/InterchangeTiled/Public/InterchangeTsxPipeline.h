@@ -21,6 +21,14 @@ class INTERCHANGETILED_API UInterchangeTsxPipeline : public UInterchangePipeline
 public:
 	static FString GetPipelineCategory(UClass* AssetClass);
 
+	// Creates the factory node for a translated tile set node, including
+	// the bidirectional target link. Shared with the TMX pipeline, which
+	// also produces tile set factory nodes for a map's tile set references.
+	static UInterchangeTileSetFactoryNode* CreateTileSetFactoryNode(
+		const UInterchangeTileSetNode* TileSetNode,
+		UInterchangeBaseNodeContainer* BaseNodeContainer
+	);
+
 	virtual void GetSupportAssetClasses(TArray<UClass*>& PipelineSupportAssetClasses) const override;
 
 protected:
