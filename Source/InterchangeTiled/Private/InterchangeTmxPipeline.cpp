@@ -73,6 +73,11 @@ void UInterchangeTmxPipeline::ExecutePipeline(
 			EInterchangeNodeContainerType::FactoryData
 		);
 
+		// Link the factory node to the translated node so the import
+		// task knows which node it consumes.
+		TileMapFactoryNode->AddTargetNodeUid(TileMapNodeUid);
+		TileMapNode->AddTargetNodeUid(TileMapFactoryNode->GetUniqueID());
+
 		TileMapFactoryNode->SetAttribute<FString>("TileSetCount", CountStr);
 		for (int32 i = 0; i < TileSetFilenames.Num(); ++i)
 		{

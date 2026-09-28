@@ -52,6 +52,11 @@ void UInterchangeTsxPipeline::ExecutePipeline(
 		);
 		TileSetFactoryNode->SetAttribute("TextureFilename", TextureFilename);
 
+		// Link the factory node to the translated node so the import
+		// task knows which node it consumes.
+		TileSetFactoryNode->AddTargetNodeUid(TileSetNodeUid);
+		TileSetNode->AddTargetNodeUid(TileSetFactoryNode->GetUniqueID());
+
 		BaseNodeContainer->AddNode(TileSetFactoryNode);
 	}
 }
