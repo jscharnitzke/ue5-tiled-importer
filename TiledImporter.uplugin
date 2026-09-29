@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 2,
-  "VersionName": "1.1",
+  "VersionName": "1.2",
   "Modules": [
     {
         "Name": "InterchangeTiled",
@@ -13,10 +13,10 @@
   "Description": "Convert Tiled TSX and TMX files into Paper2D Tile Sets and Tile Maps in Unreal Engine 5",
   "Category": "Other",
   "CreatedBy": "Joe Scharnitzke",
-  "CreatedByURL": "",
-  "DocsURL": "",
+  "CreatedByURL": "https://github.com/jscharnitzke",
+  "DocsURL": "https://github.com/jscharnitzke/ue5-tiled-importer",
   "MarketplaceURL": "",
-  "SupportURL": "",
+  "SupportURL": "https://github.com/jscharnitzke/ue5-tiled-importer/issues",
   "CanContainContent": true,
   "Installed": false,
   "IsBetaVersion": false,
