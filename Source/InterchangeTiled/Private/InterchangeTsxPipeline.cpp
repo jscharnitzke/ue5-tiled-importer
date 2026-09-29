@@ -35,28 +35,39 @@ void UInterchangeTsxPipeline::ExecutePipeline(
 	for (FString TileSetNodeUid : TileSetNodeUids)
 	{
 		const UInterchangeBaseNode* Node = BaseNodeContainer->GetNode(TileSetNodeUid);
-		const UInterchangeTileSetNode* TileSetNode = Cast<UInterchangeTileSetNode>(Node);
-
-		FString TextureFilename;
-		TileSetNode->GetAttribute("TextureFilename", TextureFilename);
-
-		UInterchangeTileSetFactoryNode* TileSetFactoryNode = NewObject<UInterchangeTileSetFactoryNode>(
-			BaseNodeContainer,
-			UInterchangeTileSetFactoryNode::StaticClass()
-		);
-
-		TileSetFactoryNode->InitializeNode(
-			UInterchangeFactoryBaseNode::BuildFactoryNodeUid(TileSetNodeUid),
-			TileSetNode->GetDisplayLabel() + "_tile_set",
-			EInterchangeNodeContainerType::FactoryData
-		);
-		TileSetFactoryNode->SetAttribute("TextureFilename", TextureFilename);
-
-		// Link the factory node to the translated node so the import
-		// task knows which node it consumes.
-		TileSetFactoryNode->AddTargetNodeUid(TileSetNodeUid);
-		TileSetNode->AddTargetNodeUid(TileSetFactoryNode->GetUniqueID());
-
-		BaseNodeContainer->AddNode(TileSetFactoryNode);
+		CreateTileSetFactoryNode(Cast<UInterchangeTileSetNode>(Node), BaseNodeContainer);
 	}
+}
+
+UInterchangeTileSetFactoryNode* UInterchangeTsxPipeline::CreateTileSetFactoryNode(
+	const UInterchangeTileSetNode* TileSetNode,
+	UInterchangeBaseNodeContainer* BaseNodeContainer
+)
+{
+	if (!TileSetNode)
+	{
+		return nullptr;
+	}
+
+	FString TextureFilename;
+	TileSetNode->GetAttribute("TextureFilename", TextureFilename);
+
+	UInterchangeTileSetFactoryNode* TileSetFactoryNode = NewObject<UInterchangeTileSetFactoryNode>(
+		BaseNodeContainer,
+		UInterchangeTileSetFactoryNode::StaticClass()
+	);
+
+	TileSetFactoryNode->InitializeNode(
+		UInterchangeFactoryBaseNode::BuildFactoryNodeUid(TileSetNode->GetUniqueID()),
+		TileSetNode->GetDisplayLabel() + "_tile_set",
+		EInterchangeNodeContainerType::FactoryData
+	);
+	TileSetFactoryNode->SetAttribute("TextureFilename", TextureFilename);
+
+	TileSetFactoryNode->AddTargetNodeUid(TileSetNode->GetUniqueID());
+	TileSetNode->AddTargetNodeUid(TileSetFactoryNode->GetUniqueID());
+
+	BaseNodeContainer->AddNode(TileSetFactoryNode);
+
+	return TileSetFactoryNode;
 }

@@ -34,12 +34,14 @@ public:
 	virtual EInterchangeTranslatorType GetTranslatorType() const override;
 	virtual bool Translate(UInterchangeBaseNodeContainer& BaseNodeContainer) const override;
 
-private:
-
+	// Also used by the TMX translator to translate referenced tile sets
+	// into the same node container.
 	bool TranslateTileSet(
 		FString Filename,
 		UInterchangeBaseNodeContainer& BaseNodeContainer
 	) const;
+
+private:
 
 	static FString GetTexturePathFromSourceFilename(FString Filename);
 };

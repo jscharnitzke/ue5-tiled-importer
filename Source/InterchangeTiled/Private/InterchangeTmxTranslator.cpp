@@ -3,6 +3,7 @@
 #include "InterchangeTiledModule.h"
 #include "InterchangeTiledUtils.h"
 #include "InterchangeTileMapNode.h"
+#include "InterchangeTsxTranslator.h"
 #include "Logging/StructuredLog.h"
 #include "XmlFile.h"
 
@@ -104,6 +105,22 @@ bool UInterchangeTmxTranslator::TranslateTileMap(FString Filename, UInterchangeB
 	}
 
 	BaseNodeContainer.AddNode(TileMapNode);
+
+	// Translate the referenced tile sets into the same container, so the
+	// map and its tile sets are imported by a single import operation.
+	UInterchangeTsxTranslator* TsxTranslator = NewObject<UInterchangeTsxTranslator>(GetTransientPackage());
+	for (const FTilesetReference& Reference : TileSetReferences)
+	{
+		if (!TsxTranslator->TranslateTileSet(Reference.Filename, BaseNodeContainer))
+		{
+			UE_LOG(
+				LogInterchangeTiledImport,
+				Warning,
+				TEXT("TMX Translator: Failed to translate tile set %s."),
+				*Reference.Filename
+			);
+		}
+	}
 
 	return true;
 }

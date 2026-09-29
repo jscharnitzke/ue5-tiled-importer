@@ -125,13 +125,23 @@ TArray<FTilesetImportInfo> UInterchangeTileMapFactory::LoadTileSets(const FSetup
 			}
 			else
 			{
-				UE_LOG(
-					LogInterchangeTiledImport,
-					Warning,
-					TEXT("Tile set asset '%s' was not found at '%s'; tiles using it will be skipped."),
-					*TileSetAssetName,
-					*ObjectPath
-				);
+				// The tile set may have been created earlier in the same
+				// import before the asset registry picked it up.
+				Info.TileSet = Cast<UPaperTileSet>(StaticLoadObject(
+					UPaperTileSet::StaticClass(),
+					nullptr,
+					*FString::Printf(TEXT("%s.%s"), *ObjectPath, *TileSetAssetName)
+				));
+				if (!Info.TileSet)
+				{
+					UE_LOG(
+						LogInterchangeTiledImport,
+						Warning,
+						TEXT("Tile set asset '%s' was not found at '%s'; tiles using it will be skipped."),
+						*TileSetAssetName,
+						*ObjectPath
+					);
+				}
 			}
 		}
 
